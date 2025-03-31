@@ -3,7 +3,7 @@ const battleshipRoute = require ("./routes/battleship.route.js");
 // const cors = require('cors');
 
 const app = express()
-const port = 3000
+const port = 3001
 
 count = 0
 

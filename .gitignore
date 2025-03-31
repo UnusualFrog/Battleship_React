@@ -2,6 +2,9 @@
 
 # dependencies
 /node_modules
+Battleship_React_Client/node_modules/
+Battleship_Express_Server/node_modules/
+Battleship_React_Client/.next/
 /.pnp
 .pnp.*
 .yarn/*

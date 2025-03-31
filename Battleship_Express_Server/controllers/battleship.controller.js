@@ -10,6 +10,17 @@ const getBattleship = async (req, res) => {
     }
 }
 
+const newGame = async (req, res) => {
+    try {
+        if (gameState) {
+
+        }
+
+    } catch (err) {
+
+    }
+}
+
 module.exports = {
     getBattleship
 };

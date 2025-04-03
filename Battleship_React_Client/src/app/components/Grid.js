@@ -1,41 +1,64 @@
-"use client";
-import Dropzone from "./Dropzone";
+'use client';
+import { useDrop } from 'react-dnd';
 
-const Grid = ({ rows, cols, onDrop, ships }) => {
+const Cell = ({ row, col, onDrop, ships }) => {
+  // Check if this cell contains a ship
+  const ship = ships.find(ship => ship.row === row && ship.col === col);
+  
+  const [{ isOver }, dropRef] = useDrop(() => ({
+    accept: "SHIP",
+    drop: (item) => onDrop(item, row, col),
+    collect: (monitor) => ({
+      isOver: !!monitor.isOver(),
+    }),
+  }));
+  
+  let cellStyle = "w-10 h-10 border border-gray-600 flex items-center justify-center";
+  let backgroundColor = "bg-blue-900"; // Dark blue for water
+  
+  if (isOver) {
+    backgroundColor = "bg-blue-400"; // Lighter blue when dragging over
+  } else if (ship) {
+    backgroundColor = "bg-gray-500"; // Gray for ship
+  }
+  
   return (
     <div
-      className="grid border border-gray-700 relative"
-      style={{
-        gridTemplateColumns: `repeat(${cols}, 40px)`, // Adjust cell size
-        gridTemplateRows: `repeat(${rows}, 40px)`,
-        display: "grid",
-        gap: "2px",
-      }}
+      ref={dropRef}
+      className={`${cellStyle} ${backgroundColor}`}
     >
-      {/* Grid Cells */}
-      {Array.from({ length: rows }).map((_, row) =>
-        Array.from({ length: cols }).map((_, col) => (
-          <Dropzone key={`${row}-${col}`} row={row} col={col} onDrop={onDrop} />
-        ))
-      )}
-
-      {/* Render Ships at Their Dropped Positions */}
-      {ships.map((ship, index) => (
-        <div
-          key={index}
-          className="absolute bg-blue-600 text-white text-sm flex items-center justify-center rounded"
-          style={{
-            width: "40px", // Adjust ship width
-            height: "40px",
-            top: `${ship.row * 42}px`, // Match grid spacing
-            left: `${ship.col * 42}px`,
-          }}
-        >
-          {ship.name}
-        </div>
-      ))}
+      <span className="text-xs text-gray-200 opacity-50">{row},{col}</span>
     </div>
   );
 };
 
-export default Grid;
+export default function Grid({ rows, cols, onDrop, ships }) {
+  // Create grid rows and cells
+  const gridRows = [];
+  
+  for (let row = 0; row < rows; row++) {
+    const rowCells = [];
+    for (let col = 0; col < cols; col++) {
+      rowCells.push(
+        <Cell
+          key={`${row}-${col}`}
+          row={row}
+          col={col}
+          onDrop={onDrop}
+          ships={ships}
+        />
+      );
+    }
+    gridRows.push(
+      <div key={`row-${row}`} className="flex">
+        {rowCells}
+      </div>
+    );
+  }
+  
+  return (
+    <div className="inline-block border-2 border-gray-700 bg-black">
+      {gridRows}
+    </div>
+  );
+}

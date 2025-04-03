@@ -1,11 +1,10 @@
-'use client'
-import { useState, useRef } from "react";
-import { DndProvider, useDrag } from 'react-dnd';
+'use client';
+import { useState } from "react";
+import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
 import DraggableShip from "./components/DraggableShip";
 import Grid from "./components/Grid";
-
 
 export default function Home() {
     // grid size
@@ -13,20 +12,36 @@ export default function Home() {
     const [cols, setCols] = useState(10);
 
     // ship counts
-    const [destroyerCount, setDestroyerCount] = useState(1)
-    const [submarineCount, setSubmarineCount] = useState(1)
-    const [cruiserCount, setCruiserCount] = useState(1)
-    const [BattleshipCount, setBattleshipCount] = useState(1)
-    const [carrierCount, setCarrierCount] = useState(1)
+    const [destroyerCount, setDestroyerCount] = useState(1);
+    const [submarineCount, setSubmarineCount] = useState(1);
+    const [cruiserCount, setCruiserCount] = useState(1);
+    const [battleshipCount, setBattleshipCount] = useState(1);
+    const [carrierCount, setCarrierCount] = useState(1);
 
     // ship placements
     const [ships, setShips] = useState([]);
 
     const handleDrop = (ship, row, col) => {
+        // Check if this ship type has already been placed based on available count
+        const placedShipsOfType = ships.filter(s => s.name === ship.name).length;
+        let availableCount = 0;
+        
+        switch(ship.name) {
+            case 'Destroyer': availableCount = destroyerCount; break;
+            case 'Submarine': availableCount = submarineCount; break;
+            case 'Cruiser': availableCount = cruiserCount; break;
+            case 'Battleship': availableCount = battleshipCount; break;
+            case 'Carrier': availableCount = carrierCount; break;
+            default: availableCount = 0;
+        }
+        
+        if (placedShipsOfType >= availableCount) {
+            return; // All ships of this type have been placed
+        }
+        
+        // Add ship to state with position
         setShips((prevShips) => [...prevShips, { ...ship, row, col }]);
     };
-
-
 
     // Control visibility of buttons
     const [newGame, setNewGame] = useState(true);
@@ -37,16 +52,20 @@ export default function Home() {
         setStartGame((prev) => !prev);
     };
 
+    const resetGame = () => {
+        setShips([]);
+    };
+
     const styles = {
-        container: "flex flex-col items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]",
-        title: "text-5xl text-center w-full",
-        main: "flex flex-col gap-[32px] items-center w-full",
+        container: "flex flex-col items-center min-h-screen p-8 pb-20 gap-8 sm:p-20 bg-black text-white",
+        title: "text-5xl text-center w-full mb-4",
+        main: "flex flex-col gap-6 items-center w-full",
         buttonGroup: "flex justify-center w-full gap-4",
-        inputContainer: "flex gap-8 justify-center w-full pb-10",
+        inputContainer: "flex flex-wrap gap-4 justify-center w-full pb-6",
         form: "flex flex-col items-center",
-        label: "block mb-2 text-sm font-medium text-gray-900 dark:text-white",
-        input: "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-20 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500",
-        footer: "flex gap-6 flex-wrap items-center justify-center",
+        label: "block mb-2 text-sm font-medium text-gray-300",
+        input: "bg-gray-800 border border-gray-600 text-white text-sm rounded-lg p-2.5 w-20",
+        shipsContainer: "flex flex-wrap gap-6 justify-center w-full pb-6",
         button: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
     };
 
@@ -62,113 +81,152 @@ export default function Home() {
                             </button>
                         )}
                         {startGame && (
-                            <button className={styles.button}>
-                                Start Game
-                            </button>
+                            <>
+                                <button className={styles.button} onClick={resetGame}>
+                                    Reset Ships
+                                </button>
+                                <button className={styles.button}>
+                                    Start Game
+                                </button>
+                            </>
                         )}
                     </div>
 
                     {startGame && (
-                        <div>
+                        <div className="w-full flex flex-col items-center">
                             {/* Grid inputs */}
                             <div className={styles.inputContainer}>
-                                <form className={styles.form}>
+                                <div className={styles.form}>
                                     <label htmlFor="rows-input" className={styles.label}>Grid Rows:</label>
                                     <input
                                         type="number"
                                         id="rows-input"
                                         placeholder="10"
                                         value={rows}
+                                        min="5"
+                                        max="15"
                                         required
-                                        onChange={(e) => setRows(Number(e.target.value))}
+                                        onChange={(e) => {
+                                            setRows(Number(e.target.value));
+                                            setShips([]);
+                                        }}
                                         className={styles.input}
                                     />
-                                </form>
-                                <form className={styles.form}>
+                                </div>
+                                <div className={styles.form}>
                                     <label htmlFor="cols-input" className={styles.label}>Grid Cols:</label>
                                     <input
                                         type="number"
                                         id="cols-input"
                                         placeholder="10"
                                         value={cols}
+                                        min="5"
+                                        max="15"
                                         required
-                                        onChange={(e) => setCols(Number(e.target.value))}
+                                        onChange={(e) => {
+                                            setCols(Number(e.target.value));
+                                            setShips([]);
+                                        }}
                                         className={styles.input}
                                     />
-                                </form>
+                                </div>
                             </div>
 
                             {/* Ship count inputs */}
                             <div className={styles.inputContainer}>
-                                <form className={styles.form}>
+                                <div className={styles.form}>
                                     <label htmlFor="destroyer-count" className={styles.label}>Destroyers:</label>
                                     <input
                                         type="number"
                                         id="destroyer-count"
                                         placeholder="1"
                                         value={destroyerCount}
+                                        min="0"
+                                        max="4"
                                         required
-                                        onChange={(e) => setDestroyerCount(Number(e.target.value))}
+                                        onChange={(e) => {
+                                            setDestroyerCount(Number(e.target.value));
+                                            setShips([]);
+                                        }}
                                         className={styles.input}
                                     />
-                                </form>
-                                <form className={styles.form}>
+                                </div>
+                                <div className={styles.form}>
                                     <label htmlFor="submarine-count" className={styles.label}>Submarines:</label>
                                     <input
                                         type="number"
                                         id="submarine-count"
                                         placeholder="1"
                                         value={submarineCount}
+                                        min="0"
+                                        max="4"
                                         required
-                                        onChange={(e) => setSubmarineCount(Number(e.target.value))}
+                                        onChange={(e) => {
+                                            setSubmarineCount(Number(e.target.value));
+                                            setShips([]);
+                                        }}
                                         className={styles.input}
                                     />
-                                </form>
-                                <form className={styles.form}>
-                                    <label htmlFor="cruiser-count" className={styles.label}>Cruiser:</label>
+                                </div>
+                                <div className={styles.form}>
+                                    <label htmlFor="cruiser-count" className={styles.label}>Cruisers:</label>
                                     <input
                                         type="number"
                                         id="cruiser-count"
                                         placeholder="1"
                                         value={cruiserCount}
+                                        min="0"
+                                        max="4"
                                         required
-                                        onChange={(e) => setCruiserCount(Number(e.target.value))}
+                                        onChange={(e) => {
+                                            setCruiserCount(Number(e.target.value));
+                                            setShips([]);
+                                        }}
                                         className={styles.input}
                                     />
-                                </form>
-                                <form className={styles.form}>
+                                </div>
+                                <div className={styles.form}>
                                     <label htmlFor="battleship-count" className={styles.label}>Battleships:</label>
                                     <input
                                         type="number"
                                         id="battleship-count"
                                         placeholder="1"
-                                        value={BattleshipCount}
+                                        value={battleshipCount}
+                                        min="0"
+                                        max="4"
                                         required
-                                        onChange={(e) => setBattleshipCount(Number(e.target.value))}
+                                        onChange={(e) => {
+                                            setBattleshipCount(Number(e.target.value));
+                                            setShips([]);
+                                        }}
                                         className={styles.input}
                                     />
-                                </form>
-                                <form className={styles.form}>
+                                </div>
+                                <div className={styles.form}>
                                     <label htmlFor="carrier-count" className={styles.label}>Carriers:</label>
                                     <input
                                         type="number"
                                         id="carrier-count"
                                         placeholder="1"
                                         value={carrierCount}
+                                        min="0"
+                                        max="4"
                                         required
-                                        onChange={(e) => setCarrierCount(Number(e.target.value))}
+                                        onChange={(e) => {
+                                            setCarrierCount(Number(e.target.value));
+                                            setShips([]);
+                                        }}
                                         className={styles.input}
                                     />
-                                </form>
-
+                                </div>
                             </div>
 
                             {/* Show draggable ships */}
-                            <div className={styles.inputContainer}>
+                            <div className={styles.shipsContainer}>
                                 {destroyerCount > 0 && <DraggableShip name="Destroyer" />}
                                 {submarineCount > 0 && <DraggableShip name="Submarine" />}
                                 {cruiserCount > 0 && <DraggableShip name="Cruiser" />}
-                                {BattleshipCount > 0 && <DraggableShip name="Battleship" />}
+                                {battleshipCount > 0 && <DraggableShip name="Battleship" />}
                                 {carrierCount > 0 && <DraggableShip name="Carrier" />}
                             </div>
 
@@ -177,7 +235,6 @@ export default function Home() {
                         </div>
                     )}
                 </main>
-                <footer className={styles.footer}></footer>
             </div>
         </DndProvider>
     );

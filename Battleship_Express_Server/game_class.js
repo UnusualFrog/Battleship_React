@@ -14,10 +14,10 @@
 
 default_grid_size = { x: 10, y: 10 }
 default_fleet = {
-    "size_1": { total: 1, afloat: 1 },
-    "size_2": { total: 2, afloat: 2 },
-    "size_3": { total: 1, afloat: 1 },
-    "size_4": { total: 1, afloat: 1 }
+    "destroyer":    { total: 1, afloat: 1, size: 2 },
+    "submarine":    { total: 2, afloat: 2, size: 3 },
+    "battleship":   { total: 1, afloat: 1, size: 4 },
+    "carrier":      { total: 1, afloat: 1, size: 5 }
 }
 
 class Game {

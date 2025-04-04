@@ -24,16 +24,19 @@ export default function DraggableShip({ name }) {
   const [isHorizontal, setIsHorizontal] = useState(true);
   const size = SHIP_SIZES[name];
   const color = SHIP_COLORS[name];
+  const startRow = 0;
+  const startCol = 0;
   
+  // Define dragging behavior
   const [{ isDragging }, dragRef] = useDrag(() => ({
     type: "SHIP",
-    item: { name, size, isHorizontal, color },
+    item: { name, size, isHorizontal, startRow, startCol, color },
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
   }));
   
-  // Create ship cells based on size
+  // Create ship cells based on size of grid
   const shipCells = [];
   for (let i = 0; i < size; i++) {
     shipCells.push(

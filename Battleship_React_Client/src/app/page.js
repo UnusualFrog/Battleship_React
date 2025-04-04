@@ -10,13 +10,13 @@ import Grid from "./components/Grid";
 
 export default function Home() {
     // grid size
-    const [rows, setRows] = useState(10);
-    const [cols, setCols] = useState(10);
+    const [gridRows, setGridRows] = useState(10);
+    const [gridCols, setGridCols] = useState(10);
 
-    // ship placements
+    // ship data
     const [ships, setShips] = useState([]);
 
-    // ship counts
+    // fleet max counts
     const [destroyerCount, setDestroyerCount] = useState(1);
     const [submarineCount, setSubmarineCount] = useState(1);
     const [cruiserCount, setCruiserCount] = useState(1);
@@ -38,9 +38,8 @@ export default function Home() {
         carrierCountRef.current = carrierCount;
     }, [destroyerCount]);
 
+    // Handle dropping of ship onto grid
     const onDrop = (item, row, col) => {
-        debugger
-        
         setShips((prevShips) => {
             switch (item.name) {
                 case "Destroyer":
@@ -80,19 +79,22 @@ export default function Home() {
     };
 
 
-    // Control visibility of buttons
+    // Control game state
     const [newGame, setNewGame] = useState(true);
     const [startGame, setStartGame] = useState(false);
 
+    // Toggle visibility of buttons
     const showStartGame = () => {
         setNewGame((prev) => !prev);
         setStartGame((prev) => !prev);
     };
 
+    // Clear all ship data
     const resetGame = () => {
         setShips([]);
     };
 
+    // Styling classes
     const styles = {
         container: "flex flex-col items-center min-h-screen p-8 pb-20 gap-8 sm:p-20 bg-black text-white",
         title: "text-5xl text-center w-full mb-4",
@@ -106,7 +108,6 @@ export default function Home() {
         button: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
     };
 
-    console.log("RENDER: destroyerCount is", destroyerCount);
     return (
         <DndProvider backend={HTML5Backend}>
             <div className={styles.container}>
@@ -140,12 +141,12 @@ export default function Home() {
                                         type="number"
                                         id="rows-input"
                                         placeholder="10"
-                                        value={rows}
+                                        value={gridRows}
                                         min="5"
                                         max="15"
                                         required
                                         onChange={(e) => {
-                                            setRows(Number(e.target.value));
+                                            setGridRows(Number(e.target.value));
                                             setShips([]);
                                         }}
                                         className={styles.input}
@@ -157,12 +158,12 @@ export default function Home() {
                                         type="number"
                                         id="cols-input"
                                         placeholder="10"
-                                        value={cols}
+                                        value={gridCols}
                                         min="5"
                                         max="15"
                                         required
                                         onChange={(e) => {
-                                            setCols(Number(e.target.value));
+                                            setGridCols(Number(e.target.value));
                                             setShips([]);
                                         }}
                                         className={styles.input}
@@ -170,7 +171,7 @@ export default function Home() {
                                 </div>
                             </div>
 
-                            {/* Ship count inputs */}
+                            {/* Ship max count inputs */}
                             <div className={styles.inputContainer}>
                                 <div className={styles.form}>
                                     <label htmlFor="destroyer-count" className={styles.label}>Destroyers:</label>
@@ -270,9 +271,9 @@ export default function Home() {
 
                             {/* Game Board */}
                             <Grid
-                                rows={rows}
-                                cols={cols}
-                                onDrop={onDrop} // <- this must point to the latest onDrop
+                                rows={gridRows}
+                                cols={gridCols}
+                                onDrop={onDrop}
                                 ships={ships}
                             />
                         </div>

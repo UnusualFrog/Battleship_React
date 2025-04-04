@@ -27,7 +27,7 @@ export default function DraggableShip({ name }) {
   
   const [{ isDragging }, dragRef] = useDrag(() => ({
     type: "SHIP",
-    item: { name, size, isHorizontal },
+    item: { name, size, isHorizontal, color },
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),

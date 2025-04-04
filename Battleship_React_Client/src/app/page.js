@@ -1,5 +1,7 @@
 'use client';
 import { useState } from "react";
+import { useRef, useEffect } from "react";
+
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
@@ -11,6 +13,9 @@ export default function Home() {
     const [rows, setRows] = useState(10);
     const [cols, setCols] = useState(10);
 
+    // ship placements
+    const [ships, setShips] = useState([]);
+
     // ship counts
     const [destroyerCount, setDestroyerCount] = useState(1);
     const [submarineCount, setSubmarineCount] = useState(1);
@@ -18,30 +23,62 @@ export default function Home() {
     const [battleshipCount, setBattleshipCount] = useState(1);
     const [carrierCount, setCarrierCount] = useState(1);
 
-    // ship placements
-    const [ships, setShips] = useState([]);
+    const destroyerCountRef = useRef(destroyerCount);
+    const submarineCountRef = useRef(submarineCount);
+    const cruiserCountRef = useRef(cruiserCount);
+    const battleshipCountRef = useRef(battleshipCount);
+    const carrierCountRef = useRef(carrierCount);
 
-    const handleDrop = (ship, row, col) => {
-        // Check if this ship type has already been placed based on available count
-        const placedShipsOfType = ships.filter(s => s.name === ship.name).length;
-        let availableCount = 0;
+    // Keep the count refs updated whenever a count state changes
+    useEffect(() => {
+        destroyerCountRef.current = destroyerCount;
+        submarineCountRef.current = cruiserCount;
+        cruiserCountRef.current = cruiserCount;
+        battleshipCountRef.current = battleshipCount;
+        carrierCountRef.current = carrierCount;
+    }, [destroyerCount]);
+
+    const onDrop = (item, row, col) => {
+        debugger
         
-        switch(ship.name) {
-            case 'Destroyer': availableCount = destroyerCount; break;
-            case 'Submarine': availableCount = submarineCount; break;
-            case 'Cruiser': availableCount = cruiserCount; break;
-            case 'Battleship': availableCount = battleshipCount; break;
-            case 'Carrier': availableCount = carrierCount; break;
-            default: availableCount = 0;
-        }
-        
-        if (placedShipsOfType >= availableCount) {
-            return; // All ships of this type have been placed
-        }
-        
-        // Add ship to state with position
-        setShips((prevShips) => [...prevShips, { ...ship, row, col }]);
+        setShips((prevShips) => {
+            switch (item.name) {
+                case "Destroyer":
+                    if ((prevShips.filter(x => x.name == "Destroyer").length) < destroyerCountRef.current) {
+                        console.log(prevShips.filter(x => x.name == "Destroyer").length)
+                        return [...prevShips, { ...item, row, col }];
+                    }
+                    return prevShips;
+                case "Submarine":
+                    if ((prevShips.filter(x => x.name == "Submarine").length) < destroyerCountRef.current) {
+                        console.log(prevShips.filter(x => x.name == "Submarine").length)
+                        return [...prevShips, { ...item, row, col }];
+                    }
+                    return prevShips;
+                case "Cruiser":
+                    if ((prevShips.filter(x => x.name == "Cruiser").length) < destroyerCountRef.current) {
+                        console.log(prevShips.filter(x => x.name == "Cruiser").length)
+                        return [...prevShips, { ...item, row, col }];
+                    }
+                    return prevShips;
+                case "Battleship":
+                    if ((prevShips.filter(x => x.name == "Battleship").length) < destroyerCountRef.current) {
+                        console.log(prevShips.filter(x => x.name == "Battleship").length)
+                        return [...prevShips, { ...item, row, col }];
+                    }
+                    return prevShips;
+                case "Carrier":
+                    if ((prevShips.filter(x => x.name == "Carrier").length) < destroyerCountRef.current) {
+                        console.log(prevShips.filter(x => x.name == "Carrier").length)
+                        return [...prevShips, { ...item, row, col }];
+                    }
+                    return prevShips;
+                default:
+                    return prevShips;
+            }
+        });
     };
+
 
     // Control visibility of buttons
     const [newGame, setNewGame] = useState(true);
@@ -69,6 +106,7 @@ export default function Home() {
         button: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
     };
 
+    console.log("RENDER: destroyerCount is", destroyerCount);
     return (
         <DndProvider backend={HTML5Backend}>
             <div className={styles.container}>
@@ -231,7 +269,12 @@ export default function Home() {
                             </div>
 
                             {/* Game Board */}
-                            <Grid rows={rows} cols={cols} onDrop={handleDrop} ships={ships} />
+                            <Grid
+                                rows={rows}
+                                cols={cols}
+                                onDrop={onDrop} // <- this must point to the latest onDrop
+                                ships={ships}
+                            />
                         </div>
                     )}
                 </main>

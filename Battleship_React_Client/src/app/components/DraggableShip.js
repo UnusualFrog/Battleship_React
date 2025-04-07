@@ -22,19 +22,18 @@ const SHIP_COLORS = {
 
 export default function DraggableShip({ name }) {
   const [isHorizontal, setIsHorizontal] = useState(true);
+  const [draggedIndex, setDraggedIndex] = useState(0);
   const size = SHIP_SIZES[name];
   const color = SHIP_COLORS[name];
-  const startRow = 0;
-  const startCol = 0;
   
   // Define dragging behavior
   const [{ isDragging }, dragRef] = useDrag(() => ({
     type: "SHIP",
-    item: { name, size, isHorizontal, startRow, startCol, color },
+    item: { name, size, isHorizontal, color, draggedIndex },
     collect: (monitor) => ({
-      isDragging: !!monitor.isDragging(),
-    }),
-  }));
+      isDragging: !!monitor.isDragging(), 
+    })  
+  }), [name, size, isHorizontal, color, draggedIndex]);
   
   // Create ship cells based on size of grid
   const shipCells = [];
@@ -43,6 +42,7 @@ export default function DraggableShip({ name }) {
       <div 
         key={i}
         className={`w-10 h-10 border border-gray-700 ${color}`}
+        onMouseDown={() => setDraggedIndex(i)} // Used to track which cell of the ship was grabbed
       ></div>
     );
   }

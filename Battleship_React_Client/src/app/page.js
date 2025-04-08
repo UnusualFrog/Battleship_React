@@ -1,25 +1,30 @@
 'use client';
+
+// React imports
 import { useState } from "react";
 import { useRef, useEffect } from "react";
 
+// External frameworks
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
-import DraggableShip from "./components/DraggableShip";
+// Import custom components
 import Grid from "./components/Grid";
+import ShipControls from "./components/ShipControls";
+import FleetControls from "./components/FleetControls";
+import GameControls from "./components/GameControls";
+
 
 export default function Home() {
-    // grid size
+    // grid dimensions
     const [gridRows, setGridRows] = useState(10);
     const [gridCols, setGridCols] = useState(10);
-
     const gridRowsRef = useRef(gridRows);
     const gridColsRef = useRef(gridCols);
 
-    // ship data
+    // ship data and ship location data
     const [ships, setShips] = useState([]);
     const [shipLocations, setShipLocations] = useState([]);
-
     const shipLocationsRef = useRef(shipLocations);
 
     // fleet max counts
@@ -35,7 +40,23 @@ export default function Home() {
     const battleshipCountRef = useRef(battleshipCount);
     const carrierCountRef = useRef(carrierCount);
 
-    // Keep the grid size and count refs updated whenever a count state changes
+    // Track orientation of the ship controls
+    const [shipOrientations, setShipOrientations] = useState({
+        Destroyer: true,
+        Submarine: true,
+        Cruiser: true,
+        Battleship: true,
+        Carrier: true
+    });
+
+    const handleOrientationChange = (shipType, isHorizontal) => {
+        setShipOrientations(prev => ({
+            ...prev,
+            [shipType]: isHorizontal
+        }));
+    };
+
+    // Keep the grid size and ship count refs updated whenever their states change
     useEffect(() => {
         gridRowsRef.current = gridRows;
         gridColsRef.current = gridCols;
@@ -46,6 +67,16 @@ export default function Home() {
         carrierCountRef.current = carrierCount;
         shipLocationsRef.current = shipLocations;
     }, [gridRows, gridCols, destroyerCount, submarineCount, cruiserCount, battleshipCount, carrierCount, shipLocations]);
+
+    // Control game state
+    const [newGame, setNewGame] = useState(true);
+    const [startGame, setStartGame] = useState(false);
+
+    // Clear all ship data
+    const resetGame = () => {
+        setShips([]);
+        setShipLocations([]);
+    };
 
     // Handle dropping of ship onto grid
     const onDrop = (item, row, col) => {
@@ -79,17 +110,16 @@ export default function Home() {
         }
 
         // Check for overlapping ships
-        debugger
         for (let ship of shipLocationsRef.current) {
             if (ship.item.isHorizontal) {
                 if (item.isHorizontal) {
                     // Horizontal vs Horizontal collision check
-                    if (startRow == ship.startRow && ((startCol >= ship.startCol && startCol <= ship.endCol) || 
+                    if (startRow == ship.startRow && ((startCol >= ship.startCol && startCol <= ship.endCol) ||
                         (endCol >= ship.startCol && endCol <= ship.endCol) ||
                         (startCol <= ship.startCol && endCol >= ship.endCol))) {
                         return;
                     }
-                } 
+                }
                 else {
                     // Horizontal vs Vertical collision check
                     if (startCol >= ship.startCol && startCol <= ship.endCol &&
@@ -97,7 +127,7 @@ export default function Home() {
                         return;
                     }
                 }
-            } 
+            }
             else {
                 if (item.isHorizontal) {
                     // Vertical vs Horizontal collision check
@@ -105,10 +135,10 @@ export default function Home() {
                         ship.startCol >= startCol && ship.startCol <= endCol) {
                         return;
                     }
-                } 
+                }
                 else {
                     // Vertical vs Vertical collision check
-                    if (startCol == ship.startCol && ((startRow >= ship.startRow && startRow <= ship.endRow) || 
+                    if (startCol == ship.startCol && ((startRow >= ship.startRow && startRow <= ship.endRow) ||
                         (endRow >= ship.startRow && endRow <= ship.endRow) ||
                         (startRow <= ship.startRow && endRow >= ship.endRow))) {
                         return;
@@ -117,282 +147,135 @@ export default function Home() {
             }
         }
 
+        // Add new ship's location to ship location data
+        setShipLocations((prevLocations) => {
+            return [...prevLocations, { item, startRow, endRow, startCol, endCol }]
+        })
 
+        // Add new ship to ship data
+        setShips((prevShips) => {
+            switch (item.name) {
+                case "Destroyer":
+                    if ((prevShips.filter(x => x.name == "Destroyer").length) < destroyerCountRef.current) {
+                        return [...prevShips, { ...item, row, col }];
+                    }
+                    return prevShips;
+                case "Submarine":
+                    if ((prevShips.filter(x => x.name == "Submarine").length) < submarineCountRef.current) {
+                        return [...prevShips, { ...item, row, col }];
+                    }
+                    return prevShips;
+                case "Cruiser":
+                    if ((prevShips.filter(x => x.name == "Cruiser").length) < cruiserCountRef.current) {
+                        return [...prevShips, { ...item, row, col }];
+                    }
+                    return prevShips;
+                case "Battleship":
+                    if ((prevShips.filter(x => x.name == "Battleship").length) < battleshipCountRef.current) {
+                        return [...prevShips, { ...item, row, col }];
+                    }
+                    return prevShips;
+                case "Carrier":
+                    if ((prevShips.filter(x => x.name == "Carrier").length) < carrierCountRef.current) {
+                        return [...prevShips, { ...item, row, col }];
+                    }
+                    return prevShips;
+                default:
+                    return prevShips;
+            }
+        });
+    };
 
-    setShipLocations((prevLocations) => {
-        return [...prevLocations, { item, startRow, endRow, startCol, endCol}]
-    })
+    // Styling classes
+    const styles = {
+        container: "flex flex-col items-center min-h-screen p-8 pb-20 gap-8 sm:p-20 bg-black text-white",
+        title: "text-5xl text-center w-full mb-4",
+        main: "flex flex-col gap-6 items-center w-full",
+    };
 
+    return (
+        <DndProvider backend={HTML5Backend}>
+            <div className={styles.container}>
+                <p className={styles.title}>Battleship</p>
+                <main className={styles.main}>
+                    <GameControls
+                        newGame={newGame}
+                        startGame={startGame}
+                        onNewGame={() => {
+                            setNewGame(false);
+                            setStartGame(true);
+                        }}
+                        onResetShips={resetGame}
+                        onStartGame={() => {
+                            // Implement what happens when starting the game
+                            console.log("Starting game with ships:", ships);
+                            // You could add state transitions here
+                        }}
+                    />
 
-    setShips((prevShips) => {
-        switch (item.name) {
-            case "Destroyer":
-                if ((prevShips.filter(x => x.name == "Destroyer").length) < destroyerCountRef.current) {
-                    return [...prevShips, { ...item, row, col }];
-                }
-                return prevShips;
-            case "Submarine":
-                if ((prevShips.filter(x => x.name == "Submarine").length) < submarineCountRef.current) {
-                    return [...prevShips, { ...item, row, col }];
-                }
-                return prevShips;
-            case "Cruiser":
-                if ((prevShips.filter(x => x.name == "Cruiser").length) < cruiserCountRef.current) {
-                    return [...prevShips, { ...item, row, col }];
-                }
-                return prevShips;
-            case "Battleship":
-                if ((prevShips.filter(x => x.name == "Battleship").length) < battleshipCountRef.current) {
-                    return [...prevShips, { ...item, row, col }];
-                }
-                return prevShips;
-            case "Carrier":
-                if ((prevShips.filter(x => x.name == "Carrier").length) < carrierCountRef.current) {
-                    return [...prevShips, { ...item, row, col }];
-                }
-                return prevShips;
-            default:
-                return prevShips;
-        }
-    });
-};
-
-
-// Control game state
-const [newGame, setNewGame] = useState(true);
-const [startGame, setStartGame] = useState(false);
-
-// Toggle visibility of buttons
-const showStartGame = () => {
-    setNewGame((prev) => !prev);
-    setStartGame((prev) => !prev);
-};
-
-// Clear all ship data
-const resetGame = () => {
-    setShips([]);
-    setShipLocations([]);
-};
-
-// Styling classes
-const styles = {
-    container: "flex flex-col items-center min-h-screen p-8 pb-20 gap-8 sm:p-20 bg-black text-white",
-    title: "text-5xl text-center w-full mb-4",
-    main: "flex flex-col gap-6 items-center w-full",
-    buttonGroup: "flex justify-center w-full gap-4",
-    inputContainer: "flex flex-wrap gap-4 justify-center w-full pb-6",
-    form: "flex flex-col items-center",
-    label: "block mb-2 text-sm font-medium text-gray-300",
-    input: "bg-gray-800 border border-gray-600 text-white text-sm rounded-lg p-2.5 w-20",
-    shipsContainer: "flex flex-wrap gap-6 justify-center w-full pb-6",
-    shipGroup: "flex flex-col items-center gap-2 mx-2",
-    button: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-};
-
-return (
-    <DndProvider backend={HTML5Backend}>
-        <div className={styles.container}>
-            <p className={styles.title}>Battleship</p>
-            <main className={styles.main}>
-                <div className={styles.buttonGroup}>
-                    {newGame && (
-                        <button className={styles.button} onClick={showStartGame}>
-                            New Game
-                        </button>
-                    )}
                     {startGame && (
-                        <>
-                            <button className={styles.button} onClick={resetGame}>
-                                Reset Ships
-                            </button>
-                            <button className={styles.button}>
-                                Start Game
-                            </button>
-                        </>
+                        <div className="w-full flex flex-col items-center">
+                            <ShipControls
+                                gridRows={gridRows}
+                                gridCols={gridCols}
+                                onGridRowsChange={(rows) => {
+                                    setGridRows(rows);
+                                    setShips([]);
+                                    setShipLocations([]);
+                                }}
+                                onGridColsChange={(cols) => {
+                                    setGridCols(cols);
+                                    setShips([]);
+                                    setShipLocations([]);
+                                }}
+                            />
+
+                            <FleetControls
+                                destroyerCount={destroyerCount}
+                                submarineCount={submarineCount}
+                                cruiserCount={cruiserCount}
+                                battleshipCount={battleshipCount}
+                                carrierCount={carrierCount}
+                                onDestroyerCountChange={(count) => {
+                                    setDestroyerCount(count);
+                                    setShips([]);
+                                    setShipLocations([]);
+                                }}
+                                onSubmarineCountChange={(count) => {
+                                    setSubmarineCount(count);
+                                    setShips([]);
+                                    setShipLocations([]);
+                                }}
+                                onCruiserCountChange={(count) => {
+                                    setCruiserCount(count);
+                                    setShips([]);
+                                    setShipLocations([]);
+                                }}
+                                onBattleshipCountChange={(count) => {
+                                    setBattleshipCount(count);
+                                    setShips([]);
+                                    setShipLocations([]);
+                                }}
+                                onCarrierCountChange={(count) => {
+                                    setCarrierCount(count);
+                                    setShips([]);
+                                    setShipLocations([]);
+                                }}
+                                shipOrientations={shipOrientations}
+                                onShipOrientationChange={handleOrientationChange}
+                            />
+
+                            {/* Game Board */}
+                            <Grid
+                                rows={gridRows}
+                                cols={gridCols}
+                                onDrop={onDrop}
+                                ships={ships}
+                            />
+                        </div>
                     )}
-                </div>
-
-                {startGame && (
-                    <div className="w-full flex flex-col items-center">
-                        {/* Grid inputs */}
-                        <div className={styles.inputContainer}>
-                            <div className={styles.form}>
-                                <label htmlFor="rows-input" className={styles.label}>Grid Rows:</label>
-                                <input
-                                    type="number"
-                                    id="rows-input"
-                                    placeholder="10"
-                                    value={gridRows}
-                                    min="5"
-                                    max="15"
-                                    required
-                                    onChange={(e) => {
-                                        setGridRows(Number(e.target.value));
-                                        setShips([]);
-                                        setShipLocations([]);
-                                    }}
-                                    className={styles.input}
-                                />
-                            </div>
-                            <div className={styles.form}>
-                                <label htmlFor="cols-input" className={styles.label}>Grid Cols:</label>
-                                <input
-                                    type="number"
-                                    id="cols-input"
-                                    placeholder="10"
-                                    value={gridCols}
-                                    min="5"
-                                    max="15"
-                                    required
-                                    onChange={(e) => {
-                                        setGridCols(Number(e.target.value));
-                                        setShips([]);
-                                        setShipLocations([]);
-                                    }}
-                                    className={styles.input}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Ship selectors and ships aligned together */}
-                        <div className={styles.shipsContainer}>
-                            {/* Destroyer Group */}
-                            {destroyerCount > 0 && (
-                                <div className={styles.shipGroup}>
-                                    <div className={styles.form}>
-                                        <label htmlFor="destroyer-count" className={styles.label}>Destroyers:</label>
-                                        <input
-                                            type="number"
-                                            id="destroyer-count"
-                                            placeholder="1"
-                                            value={destroyerCount}
-                                            min="0"
-                                            max="4"
-                                            required
-                                            onChange={(e) => {
-                                                setDestroyerCount(Number(e.target.value));
-                                                setShips([]);
-                                                setShipLocations([]);
-                                            }}
-                                            className={styles.input}
-                                        />
-                                    </div>
-                                    <DraggableShip name="Destroyer" />
-                                </div>
-                            )}
-
-                            {/* Submarine Group */}
-                            {submarineCount > 0 && (
-                                <div className={styles.shipGroup}>
-                                    <div className={styles.form}>
-                                        <label htmlFor="submarine-count" className={styles.label}>Submarines:</label>
-                                        <input
-                                            type="number"
-                                            id="submarine-count"
-                                            placeholder="1"
-                                            value={submarineCount}
-                                            min="0"
-                                            max="4"
-                                            required
-                                            onChange={(e) => {
-                                                setSubmarineCount(Number(e.target.value));
-                                                setShips([]);
-                                                setShipLocations([]);
-                                            }}
-                                            className={styles.input}
-                                        />
-                                    </div>
-                                    <DraggableShip name="Submarine" />
-                                </div>
-                            )}
-
-                            {/* Cruiser Group */}
-                            {cruiserCount > 0 && (
-                                <div className={styles.shipGroup}>
-                                    <div className={styles.form}>
-                                        <label htmlFor="cruiser-count" className={styles.label}>Cruisers:</label>
-                                        <input
-                                            type="number"
-                                            id="cruiser-count"
-                                            placeholder="1"
-                                            value={cruiserCount}
-                                            min="0"
-                                            max="4"
-                                            required
-                                            onChange={(e) => {
-                                                setCruiserCount(Number(e.target.value));
-                                                setShips([]);
-                                                setShipLocations([]);
-                                            }}
-                                            className={styles.input}
-                                        />
-                                    </div>
-                                    <DraggableShip name="Cruiser" />
-                                </div>
-                            )}
-
-                            {/* Battleship Group */}
-                            {battleshipCount > 0 && (
-                                <div className={styles.shipGroup}>
-                                    <div className={styles.form}>
-                                        <label htmlFor="battleship-count" className={styles.label}>Battleships:</label>
-                                        <input
-                                            type="number"
-                                            id="battleship-count"
-                                            placeholder="1"
-                                            value={battleshipCount}
-                                            min="0"
-                                            max="4"
-                                            required
-                                            onChange={(e) => {
-                                                setBattleshipCount(Number(e.target.value));
-                                                setShips([]);
-                                                setShipLocations([]);
-                                            }}
-                                            className={styles.input}
-                                        />
-                                    </div>
-                                    <DraggableShip name="Battleship" />
-                                </div>
-                            )}
-
-                            {/* Carrier Group */}
-                            {carrierCount > 0 && (
-                                <div className={styles.shipGroup}>
-                                    <div className={styles.form}>
-                                        <label htmlFor="carrier-count" className={styles.label}>Carriers:</label>
-                                        <input
-                                            type="number"
-                                            id="carrier-count"
-                                            placeholder="1"
-                                            value={carrierCount}
-                                            min="0"
-                                            max="4"
-                                            required
-                                            onChange={(e) => {
-                                                setCarrierCount(Number(e.target.value));
-                                                setShips([]);
-                                                setShipLocations([]);
-                                            }}
-                                            className={styles.input}
-                                        />
-                                    </div>
-                                    <DraggableShip name="Carrier" />
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Game Board */}
-                        <Grid
-                            rows={gridRows}
-                            cols={gridCols}
-                            onDrop={onDrop}
-                            ships={ships}
-                        />
-                    </div>
-                )}
-            </main>
-        </div>
-    </DndProvider>
-);
+                </main>
+            </div>
+        </DndProvider>
+    );
 }

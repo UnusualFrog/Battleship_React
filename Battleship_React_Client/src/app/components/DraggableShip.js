@@ -20,44 +20,50 @@ const SHIP_COLORS = {
   Carrier: 'bg-purple-600'
 };
 
-export default function DraggableShip({ name }) {
-  const [isHorizontal, setIsHorizontal] = useState(true);
+export default function DraggableShip({
+  name,
+  isHorizontal,
+  onOrientationChange
+}) {
+  const toggleOrientation = () => {
+    onOrientationChange(!isHorizontal);
+  };
   const [draggedIndex, setDraggedIndex] = useState(0);
   const size = SHIP_SIZES[name];
   const color = SHIP_COLORS[name];
-  
+
   // Define dragging behavior
   const [{ isDragging }, dragRef] = useDrag(() => ({
     type: "SHIP",
     item: { name, size, isHorizontal, color, draggedIndex },
     collect: (monitor) => ({
-      isDragging: !!monitor.isDragging(), 
-    })  
+      isDragging: !!monitor.isDragging(),
+    })
   }), [name, size, isHorizontal, color, draggedIndex]);
-  
+
   // Create ship cells based on size of grid
   const shipCells = [];
   for (let i = 0; i < size; i++) {
     shipCells.push(
-      <div 
+      <div
         key={i}
         className={`w-10 h-10 border border-gray-700 ${color}`}
         onMouseDown={() => setDraggedIndex(i)} // Used to track which cell of the ship was grabbed
       ></div>
     );
   }
-  
+
   return (
     <div className="flex flex-col items-center mb-4">
-      <div 
+      <div
         ref={dragRef}
         className={`flex cursor-move ${isDragging ? 'opacity-50' : 'opacity-100'} ${isHorizontal ? 'flex-row' : 'flex-col'}`}
       >
         {shipCells}
       </div>
       <div className="mt-2 flex flex-col items-center">
-        <button 
-          onClick={() => setIsHorizontal(!isHorizontal)}
+        <button
+          onClick={() => toggleOrientation()}
           className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
         >
           Rotate

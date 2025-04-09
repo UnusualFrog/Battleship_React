@@ -1,6 +1,7 @@
 import { useDrop } from 'react-dnd';
 
-export default function Cell({ row: gridRow, col: gridCol, onDrop, ships }) {
+export default function Cell({ row: gridRow, col: gridCol, onDrop, ships, owner }) {
+  
   const checkShipBounds = (ship) => {
 
     var startRow = null;
@@ -43,7 +44,7 @@ export default function Cell({ row: gridRow, col: gridCol, onDrop, ships }) {
   }));
 
   let cellStyle = "w-10 h-10 border border-gray-600 flex items-center justify-center";
-  let backgroundColor = "bg-blue-900"; // Dark blue for water
+  let backgroundColor = owner == "Player" ? "bg-blue-700": "bg-gray-500"; // Blue for Player, Gray for opponent
 
   // Set color of cell, use ship color if ship exists
   if (isOver) {
@@ -52,12 +53,25 @@ export default function Cell({ row: gridRow, col: gridCol, onDrop, ships }) {
     backgroundColor = ship.color
   }
 
-  return (
-    <div
-      ref={dropRef}
-      className={`${cellStyle} ${backgroundColor}`}
-    >
-      <span className="text-xs text-gray-200 opacity-50">{gridRow},{gridCol}</span>
-    </div>
-  );
+  if (owner == "Player") {
+    return (
+      <div
+        ref={dropRef}
+        className={`${cellStyle} ${backgroundColor}`}
+      >
+        <span className="text-xs text-gray-200 opacity-50">{gridRow},{gridCol}</span>
+      </div>
+    );
+  } else {
+    return (
+      <div
+        ref={dropRef}
+        className={`${cellStyle} ${backgroundColor}`}
+        onClick={() => {console.log("clicked " + gridRow, gridCol)}}
+      >
+        <span className="text-xs text-gray-200 opacity-50">{gridRow},{gridCol}</span>
+      </div>
+    );
+  }
+  
 };

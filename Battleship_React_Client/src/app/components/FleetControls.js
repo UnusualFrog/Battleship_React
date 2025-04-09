@@ -22,7 +22,7 @@ export default function FleetControls({
         shipsContainer: "flex flex-wrap gap-6 justify-center w-full pb-6",
         shipGroup: "flex flex-col items-center gap-2 mx-2",
         form: "flex flex-col items-center",
-        label: "block mb-2 text-sm font-medium text-gray-300",
+        label: "block mb-2 text-sm font-medium text-white-300",
         input: "bg-gray-800 border border-gray-600 text-white text-sm rounded-lg p-2.5 w-20",
     };
 

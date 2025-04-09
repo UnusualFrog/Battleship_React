@@ -68,7 +68,7 @@ export default function DraggableShip({
         >
           Rotate
         </button>
-        <span className="text-sm mt-1 text-white">{name}</span>
+        {/* <span className="text-sm mt-1 text-white">{name}</span> */}
       </div>
     </div>
   );

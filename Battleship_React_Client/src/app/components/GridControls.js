@@ -2,7 +2,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 
-export default function ShipControls({ 
+export default function GridControls({ 
   gridRows, 
   gridCols, 
   onGridRowsChange, 

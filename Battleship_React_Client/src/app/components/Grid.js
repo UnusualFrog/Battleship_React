@@ -2,7 +2,7 @@
 
 import Cell from './Cell'
 
-export default function Grid({ rows, cols, onDrop, ships }) {
+export default function Grid({ rows, cols, onDrop, ships, owner }) {
   const gridRows = [];
 
   // Create grid rows and cells
@@ -16,6 +16,7 @@ export default function Grid({ rows, cols, onDrop, ships }) {
           col={col}
           onDrop={onDrop}
           ships={ships}
+          owner={owner}
         />
       );
     }
@@ -28,6 +29,7 @@ export default function Grid({ rows, cols, onDrop, ships }) {
 
   return (
     <div className="inline-block border-2 border-gray-700 bg-black">
+      <p className="text-black text-center bg-white">{owner}</p>
       {gridRows}
     </div>
   );

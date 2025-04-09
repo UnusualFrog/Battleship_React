@@ -10,30 +10,32 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 
 // Import custom components
 import Grid from "./components/Grid";
-import ShipControls from "./components/ShipControls";
+import GridControls from "./components/GridControls";
 import FleetControls from "./components/FleetControls";
 import GameControls from "./components/GameControls";
+import Output from "./components/Output";
 
 
 export default function Home() {
-    // grid dimensions
+    // Grid row and column dimensions
     const [gridRows, setGridRows] = useState(10);
     const [gridCols, setGridCols] = useState(10);
     const gridRowsRef = useRef(gridRows);
     const gridColsRef = useRef(gridCols);
 
-    // ship data and ship location data
+    // Ship data and ship location data
     const [ships, setShips] = useState([]);
     const [shipLocations, setShipLocations] = useState([]);
     const shipLocationsRef = useRef(shipLocations);
 
-    // fleet max counts
+    // Max number of each ship type
     const [destroyerCount, setDestroyerCount] = useState(1);
     const [submarineCount, setSubmarineCount] = useState(1);
     const [cruiserCount, setCruiserCount] = useState(1);
     const [battleshipCount, setBattleshipCount] = useState(1);
     const [carrierCount, setCarrierCount] = useState(1);
 
+    // Reference variable for updating state changes
     const destroyerCountRef = useRef(destroyerCount);
     const submarineCountRef = useRef(submarineCount);
     const cruiserCountRef = useRef(cruiserCount);
@@ -49,6 +51,7 @@ export default function Home() {
         Carrier: true
     });
 
+    // Invert orientation of ship controls
     const handleOrientationChange = (shipType, isHorizontal) => {
         setShipOrientations(prev => ({
             ...prev,
@@ -56,7 +59,7 @@ export default function Home() {
         }));
     };
 
-    // Keep the grid size and ship count refs updated whenever their states change
+    // Keep the grid size and ship count reference variables updated whenever their states change
     useEffect(() => {
         gridRowsRef.current = gridRows;
         gridColsRef.current = gridCols;
@@ -68,18 +71,38 @@ export default function Home() {
         shipLocationsRef.current = shipLocations;
     }, [gridRows, gridCols, destroyerCount, submarineCount, cruiserCount, battleshipCount, carrierCount, shipLocations]);
 
-    // Control game state
-    const [newGame, setNewGame] = useState(true);
-    const [startGame, setStartGame] = useState(false);
+    // Add state for messages
+    const [gameMessages, setGameMessages] = useState([]);
 
-    // Clear all ship data
-    const resetGame = () => {
-        setShips([]);
-        setShipLocations([]);
+    // Function to add messages
+    const addMessage = (text, type = 'info') => {
+        setGameMessages(prevMessages => [
+            ...prevMessages,
+            {
+                text,
+                type,
+                timestamp: new Date().toLocaleTimeString('en-GB', { hour12: true })
+            }
+        ]);
     };
 
-    // Handle dropping of ship onto grid
+    // Control game state
+    const [gameState, setGameState] = useState("newGame");
+
+    // Clear all ship data and ship location data
+    const resetShips = () => {
+        setShips([]);
+        setShipLocations([]);
+        addMessage(`Ships Reset`);
+    };
+
+    
+
+    {/* Handle dropping of ship onto grid
+    Checks for overlapping ships and out-of-bounds placement
+    Updates ship data and ship location data on success*/}
     const onDrop = (item, row, col) => {
+        debugger
         var startRow = null;
         var endRow = null;
         var startCol = null;
@@ -101,10 +124,12 @@ export default function Home() {
         // Check if ship is within bounds
         if (item.isHorizontal) {
             if (!((startCol >= 0) && (endCol <= gridColsRef.current - 1))) {
+                addMessage(`Cannot place ${item.name} - out of bounds!`, 'error');
                 return;
             }
         } else {
             if (!((startRow >= 0) && (endRow <= gridRowsRef.current - 1))) {
+                addMessage(`Cannot place ${item.name} - out of bounds!`, 'error');
                 return;
             }
         }
@@ -117,6 +142,7 @@ export default function Home() {
                     if (startRow == ship.startRow && ((startCol >= ship.startCol && startCol <= ship.endCol) ||
                         (endCol >= ship.startCol && endCol <= ship.endCol) ||
                         (startCol <= ship.startCol && endCol >= ship.endCol))) {
+                        addMessage(`Cannot place ${item.name} - ship overlaps ${ship.item.name}!`, 'error');
                         return;
                     }
                 }
@@ -124,6 +150,7 @@ export default function Home() {
                     // Horizontal vs Vertical collision check
                     if (startCol >= ship.startCol && startCol <= ship.endCol &&
                         ship.startRow >= startRow && ship.startRow <= endRow) {
+                        addMessage(`Cannot place ${item.name} - ship overlaps ${ship.item.name}!`, 'error');
                         return;
                     }
                 }
@@ -133,6 +160,7 @@ export default function Home() {
                     // Vertical vs Horizontal collision check
                     if (startRow >= ship.startRow && startRow <= ship.endRow &&
                         ship.startCol >= startCol && ship.startCol <= endCol) {
+                        addMessage(`Cannot place ${item.name} - ship overlaps ${ship.item.name}!`, 'error');
                         return;
                     }
                 }
@@ -141,6 +169,7 @@ export default function Home() {
                     if (startCol == ship.startCol && ((startRow >= ship.startRow && startRow <= ship.endRow) ||
                         (endRow >= ship.startRow && endRow <= ship.endRow) ||
                         (startRow <= ship.startRow && endRow >= ship.endRow))) {
+                        addMessage(`Cannot place ${item.name} - ship overlaps ${ship.item.name}!`, 'error');
                         return;
                     }
                 }
@@ -157,28 +186,38 @@ export default function Home() {
             switch (item.name) {
                 case "Destroyer":
                     if ((prevShips.filter(x => x.name == "Destroyer").length) < destroyerCountRef.current) {
+                        addMessage(`Successfully placed ${item.name}`, 'success');
                         return [...prevShips, { ...item, row, col }];
                     }
+                    addMessage(`Cannot Place ${item.name}, max capacity of ${destroyerCountRef.current} reached`, 'error');
                     return prevShips;
                 case "Submarine":
                     if ((prevShips.filter(x => x.name == "Submarine").length) < submarineCountRef.current) {
+                        addMessage(`Successfully placed ${item.name}`, 'success');
                         return [...prevShips, { ...item, row, col }];
                     }
+                    addMessage(`Cannot Place ${item.name}, max capacity of ${submarineCountRef.current} reached`, 'error');
                     return prevShips;
                 case "Cruiser":
                     if ((prevShips.filter(x => x.name == "Cruiser").length) < cruiserCountRef.current) {
+                        addMessage(`Successfully placed ${item.name}`, 'success');
                         return [...prevShips, { ...item, row, col }];
                     }
+                    addMessage(`Cannot Place ${item.name}, max capacity of ${cruiserCountRef.current} reached`, 'error');
                     return prevShips;
                 case "Battleship":
                     if ((prevShips.filter(x => x.name == "Battleship").length) < battleshipCountRef.current) {
+                        addMessage(`Successfully placed ${item.name}`, 'success');
                         return [...prevShips, { ...item, row, col }];
                     }
+                    addMessage(`Cannot Place ${item.name}, max capacity of ${battleshipCountRef.current} reached`, 'error');
                     return prevShips;
                 case "Carrier":
                     if ((prevShips.filter(x => x.name == "Carrier").length) < carrierCountRef.current) {
+                        addMessage(`Successfully placed ${item.name}`, 'success');
                         return [...prevShips, { ...item, row, col }];
                     }
+                    addMessage(`Cannot Place ${item.name}, max capacity of ${carrierCountRef.current} reached`, 'error');
                     return prevShips;
                 default:
                     return prevShips;
@@ -186,7 +225,7 @@ export default function Home() {
         });
     };
 
-    // Styling classes
+    // Classes for Tailwind css styling
     const styles = {
         container: "flex flex-col items-center min-h-screen p-8 pb-20 gap-8 sm:p-20 bg-black text-white",
         title: "text-5xl text-center w-full mb-4",
@@ -198,24 +237,24 @@ export default function Home() {
             <div className={styles.container}>
                 <p className={styles.title}>Battleship</p>
                 <main className={styles.main}>
+                    {/* Controls for managing game state */}
                     <GameControls
-                        newGame={newGame}
-                        startGame={startGame}
+                        gameState={gameState}
                         onNewGame={() => {
-                            setNewGame(false);
-                            setStartGame(true);
+                            setGameState("startGame")
                         }}
-                        onResetShips={resetGame}
+                        onResetShips={resetShips}
                         onStartGame={() => {
-                            // Implement what happens when starting the game
-                            console.log("Starting game with ships:", ships);
-                            // You could add state transitions here
+                            // TODO add check for current ships == max ships to ensure all ships placed
+                            setGameState("activeGame")
+                            addMessage(`Game Started`);
                         }}
                     />
 
-                    {startGame && (
+                    {gameState == "startGame" && (
                         <div className="w-full flex flex-col items-center">
-                            <ShipControls
+                            {/* Controls size of grid */}
+                            <GridControls
                                 gridRows={gridRows}
                                 gridCols={gridCols}
                                 onGridRowsChange={(rows) => {
@@ -230,6 +269,7 @@ export default function Home() {
                                 }}
                             />
 
+                            {/* Controls ship counts and rendering of draggable ships */}
                             <FleetControls
                                 destroyerCount={destroyerCount}
                                 submarineCount={submarineCount}
@@ -240,40 +280,65 @@ export default function Home() {
                                     setDestroyerCount(count);
                                     setShips([]);
                                     setShipLocations([]);
+                                    addMessage(`Destroyer count set to ${count}, ships reset`);
                                 }}
                                 onSubmarineCountChange={(count) => {
                                     setSubmarineCount(count);
                                     setShips([]);
                                     setShipLocations([]);
+                                    addMessage(`Submarine count set to ${count}, ships reset`);
                                 }}
                                 onCruiserCountChange={(count) => {
                                     setCruiserCount(count);
                                     setShips([]);
                                     setShipLocations([]);
+                                    addMessage(`Cruiser count set to ${count}, ships reset`);
                                 }}
                                 onBattleshipCountChange={(count) => {
                                     setBattleshipCount(count);
                                     setShips([]);
                                     setShipLocations([]);
+                                    addMessage(`Battleship count set to ${count}, ships reset`);
                                 }}
                                 onCarrierCountChange={(count) => {
                                     setCarrierCount(count);
                                     setShips([]);
                                     setShipLocations([]);
+                                    addMessage(`Carrier count set to ${count}, ships reset`);
                                 }}
                                 shipOrientations={shipOrientations}
                                 onShipOrientationChange={handleOrientationChange}
                             />
 
-                            {/* Game Board */}
+
+                        </div>
+                    )}
+
+                    {/* Player and Opponent Game Boards */}
+                    <div className="flex flex-row gap-8">
+                        {gameState !== "newGame" && (
                             <Grid
                                 rows={gridRows}
                                 cols={gridCols}
                                 onDrop={onDrop}
                                 ships={ships}
+                                owner="Player"
                             />
-                        </div>
-                    )}
+                        )}
+                        {gameState === "activeGame" && (
+                            <Grid
+                                rows={gridRows}
+                                cols={gridCols}
+                                onDrop={onDrop}
+                                ships={[]}
+                                owner="Opponent"
+                            />
+                        )}
+                    </div>
+                    {/* Console output*/}
+                    {gameState !== "newGame" && <div>
+                        <Output gameMessages={gameMessages}/>
+                    </div>}
                 </main>
             </div>
         </DndProvider>

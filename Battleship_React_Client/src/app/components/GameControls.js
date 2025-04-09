@@ -2,8 +2,7 @@
 'use client';
 
 export default function GameControls({
-    newGame,
-    startGame,
+    gameState,
     onNewGame,
     onResetShips,
     onStartGame
@@ -15,12 +14,12 @@ export default function GameControls({
 
     return (
         <div className={styles.buttonGroup}>
-            {newGame && (
+            {gameState == "newGame" && (
                 <button className={styles.button} onClick={onNewGame}>
                     New Game
                 </button>
             )}
-            {startGame && (
+            {gameState == "startGame" && (
                 <>
                     <button className={styles.button} onClick={onResetShips}>
                         Reset Ships

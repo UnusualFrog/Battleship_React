@@ -5,9 +5,9 @@ const { newGame, lob, hit, miss, status, cancel, concede } = require("../control
 const battleshipRouter = express.Router();
 
 // map routes to controller functions
-battleshipRouter.get('/new/', newGame)
-battleshipRouter.get('/lob', lob)
-battleshipRouter.get('/hit', hit)
+battleshipRouter.post('/new/', newGame)
+battleshipRouter.post('/lob', lob)
+battleshipRouter.post('/hit', hit)
 battleshipRouter.get('/miss', miss)
 battleshipRouter.get('/status', status)
 battleshipRouter.get('/cancel', cancel)

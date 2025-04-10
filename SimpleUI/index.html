@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Battleship</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Battleship Game</h1>
+        </div>
+
+        <div class="control-panel">
+            <div class="button-row">
+                <button id="new-game">Start New Game</button>
+                <input type="number" id="rows" min="5" max="100" value="10" placeholder="Rows">
+                <input type="number" id="cols" min="5" max="100" value="10" placeholder="Cols">
+            </div>
+
+            <div class="ship-controls">
+                <h3>Ship Configuration</h3>
+                <div class="ship-config">
+                    <div class="ship-input">
+                        <label for="destroyer-count">Destroyer (2 cells):</label>
+                        <input type="number" id="destroyer-count" min="0" max="100" value="1">
+                    </div>
+                    <div class="ship-input">
+                        <label for="submarine-count">Submarine (3 cells):</label>
+                        <input type="number" id="submarine-count" min="0" max="100" value="2">
+                    </div>
+                    <div class="ship-input">
+                        <label for="battleship-count">Battleship (4 cells):</label>
+                        <input type="number" id="battleship-count" min="0" max="100" value="1">
+                    </div>
+                    <div class="ship-input">
+                        <label for="carrier-count">Carrier (5 cells):</label>
+                        <input type="number" id="carrier-count" min="0" max="100" value="1">
+                    </div>
+                </div>
+            </div>
+
+            <div id="game-input">
+                <input type="text" id="guess-x" placeholder="X">
+                <input type="text" id="guess-y" placeholder="Y">
+                <button id="make-guess">Make Guess</button>
+            </div>
+
+            <div class="ship-hit-selection">
+                <h4>Select ship type hit:</h4>
+                <div class="radio-group">
+                    <label><input type="radio" name="shipType" value="d" checked> Destroyer</label>
+                    <label><input type="radio" name="shipType" value="s"> Submarine</label>
+                    <label><input type="radio" name="shipType" value="b"> Battleship</label>
+                    <label><input type="radio" name="shipType" value="c"> Carrier</label>
+                </div>
+            </div>
+
+            <div class="button-row">
+                <button id="hit-button">Hit</button>
+                <button id="miss-button">Miss</button>
+            </div>
+
+            <div class="button-row">
+                <button id="status-button">Game Status</button>
+                <button id="concede-button">You Win</button>
+                <button id="quit-button">I Quit</button>
+            </div>
+        </div>
+
+        <div class="display-area" id="game-display">
+            Welcome to Battleship! Press "Start New Game" to begin.
+        </div>
+
+        <div class="status-area" id="game-status">
+            Status: No active game
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

@@ -15,6 +15,11 @@ const newGame = async (req, res) => {
             }
         }
 
+        // Check if the area of the fleet would fill the entire board, empty space is required
+        if (game.checkArea(req.body.grid, req.body.fleet)) {
+            throw new Error("Specified fleet exceeds area of specified grid, please modify paramaters")
+        }
+
         // Generate new game and set inital values
         game = new Game(req.body.grid, req.body.fleet)
         game.gameState = "client_turn"
@@ -42,28 +47,117 @@ const newGame = async (req, res) => {
 
 const lob = async (req, res) => {
     try {
+        if (game.gameState == "inactive") {
+            throw new Error("No game in progress, cannot lob")
+        }
 
-        res.status(200).json("lobbed");
+        let result = game.checkLob(req.body.grid[0], req.body.grid[1])
+        game.cycle++;
+        game.calculateDuration();
+
+        let response = {};
+        switch (result) {
+            case "hit":
+                response = {
+                    'status': 'hit',
+                    'grid': game.generateGuess(),
+                    'cycle': game.cycle, 'time': new Date().toLocaleTimeString('en-GB', { hour12: true })
+                }
+                break;
+            case "miss":
+                response = {
+                    'status': 'miss',
+                    'grid': game.generateGuess(),
+                    'cycle': game.cycle, 'time': new Date().toLocaleTimeString('en-GB', { hour12: true })
+                }
+                break;
+            case "sunk":
+                response = {
+                    'status': 'sunk',
+                    'grid': game.generateGuess(),
+                    'cycle': game.cycle, 'time': new Date().toLocaleTimeString('en-GB', { hour12: true })
+                }
+                break;
+            case "defeated":
+                game.gameState = "inactive"
+                response = {
+                    'status': 'concede',
+                    'message': 'You win',
+                    'cycle': game.cycle,
+                    'duration': game.duration_seconds,
+                    'myfleet': game.serverFleet,
+                    'yourfleet': game.clientFleet,
+                    'time': new Date().toLocaleTimeString('en-GB', { hour12: true })
+                }
+                break;
+        }
+
+
+        res.status(200).json(response);
     } catch (err) {
-        res.status(500).json(err);
+        let response = {
+            'status': 'reject', 'time': new Date().toLocaleTimeString('en-GB', { hour12: true })
+        }
+        res.status(500).json(response);
     }
 }
 
 const hit = async (req, res) => {
     try {
+        if (game.gameState == "inactive") {
+            throw new Error("No game in progress, cannot hit")
+        }
 
-        res.status(200).json("hit");
+        let response = {
+            'status': 'ok'
+        }
+
+        let result = game.handleHit(req.body.ship);
+
+        if (result == "defeated") {
+            this.gameState="inactive"
+            response = {
+                'status': 'defeated',
+                'message': 'You lose',
+                'cycle': game.cycle,
+                'duration': game.duration_seconds,
+                'myfleet': game.serverFleet,
+                'yourfleet': game.clientFleet,
+                'time': new Date().toLocaleTimeString('en-GB', { hour12: true })
+            }
+        }
+
+        res.status(200).json(response);
     } catch (err) {
-        res.status(500).json(err);
+        let response = {
+            'status': 'reject',
+            'message': 'Unexpected',
+            'time': new Date().toLocaleTimeString('en-GB', { hour12: true })
+        }
+        console.log(err)
+        res.status(500).json(response);
     }
 }
 
 const miss = async (req, res) => {
     try {
+        if (game.gameState == "inactive") {
+            throw new Error("No game in progress, cannot miss")
+        }
 
-        res.status(200).json("miss");
+        let response = {
+            'status': 'ok'
+        }
+        res.status(200).json(response);
     } catch (err) {
-        res.status(500).json(err);
+
+        let response = {
+            'status': 'reject',
+            'message': 'Unexpected',
+            'time': new Date().toLocaleTimeString('en-GB', { hour12: true })
+        }
+        console.log(err)
+        res.status(500).json(response);
     }
 }
 
@@ -79,8 +173,8 @@ const status = async (req, res) => {
                 'status': 'in progress',
                 'cycle': game.cycle,
                 'duration': game.duration_seconds,
-                'myfleet': game.clientFleet,
-                'yourfleet': game.serverFleet,
+                'myfleet': game.serverFleet,
+                'yourfleet': game.clientFleet,
                 'time': new Date().toLocaleTimeString('en-GB', { hour12: true })
             }
             res.status(200).json(response);
@@ -95,19 +189,51 @@ const status = async (req, res) => {
 
 const cancel = async (req, res) => {
     try {
+        if (game.gameState == "inactive") {
+            throw new Error("No game in progress, cannot cancel")
+        }
 
-        res.status(200).json("quit");
+        game.calculateDuration();
+        game.gameState = "inactive";
+
+        let response = {
+            'status': 'ended',
+            'message': 'Game over. Thank you for playing',
+            'cycle': game.cycle,
+            'duration': game.duration_seconds,
+            'myfleet': game.serverFleet,
+            'yourfleet': game.clientFleet,
+            'time': new Date().toLocaleTimeString('en-GB', { hour12: true })
+        }
+        res.status(200).json(response);
     } catch (err) {
-        res.status(500).json(err);
+        console.log(err)
+        res.status(500).json({ 'status': 'reject', 'time': new Date().toLocaleTimeString('en-GB', { hour12: true }) });
     }
 }
 
 const concede = async (req, res) => {
     try {
+        if (game.gameState == "inactive") {
+            throw new Error("No game in progress, cannot concede")
+        }
 
-        res.status(200).json("concede");
+        game.calculateDuration();
+        game.gameState = "inactive"
+
+        let response = {
+            'status': 'ended',
+            'message': 'I win. Thank you for playing.',
+            'cycle': game.cycle,
+            'duration': game.duration_seconds,
+            'myfleet': game.serverFleet,
+            'yourfleet': game.clientFleet,
+            'time': new Date().toLocaleTimeString('en-GB', { hour12: true })
+        }
+        res.status(200).json(response);
     } catch (err) {
-        res.status(500).json(err);
+        console.log(err);
+        res.status(500).json({ 'status': 'reject', 'time': new Date().toLocaleTimeString('en-GB', { hour12: true }) });
     }
 }
 
